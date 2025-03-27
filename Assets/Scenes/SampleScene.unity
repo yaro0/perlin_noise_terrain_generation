@@ -250,7 +250,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   xheight: 10
   zwidth: 10
-  resolution: 80
+  resolution: 100
 --- !u!23 &729443812
 MeshRenderer:
   m_ObjectHideFlags: 0
