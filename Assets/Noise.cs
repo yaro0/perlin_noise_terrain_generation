@@ -1,18 +1,118 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-public class Noise : MonoBehaviour
+public static class Noise 
 {
-    // Start is called before the first frame update
-    void Start()
+      private static int[] permutation;
+
+      public static void Initialize(int seed)
+      {
+        permutation = GeneratePermutation(seed);
+      }
+
+    private static void EnsureInitialized()
     {
-        
+        if (permutation == null)
+        {
+            Debug.LogWarning("Noise system was not initialized! Using default seed 0.");
+            Initialize(0);
+        }
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+      private static Vector2 GetConstantVector(int v)
+      {
+          // v is the value from the permutation table
+          int h = v & 3;
+          if (h == 0)
+              return new Vector2(1.0f, 1.0f);
+          else if (h == 1)
+              return new Vector2(-1.0f, 1.0f);
+          else if (h == 2)
+              return new Vector2(-1.0f, -1.0f);
+          else
+              return new Vector2(1.0f, -1.0f);
+      }
+
+      private static float Fade(float t)
+      {
+          return ((6 * t - 15) * t + 10) * t * t * t;
+      }
+
+      private static float Lerp(float t, float a1, float a2)
+      {
+          return a1 + t * (a2 - a1);
+      }
+
+      public static float CreatePerlinNoise(float x, float y)
+      {
+          EnsureInitialized();
+          int X = Mathf.FloorToInt(x) & 255;
+          int Y = Mathf.FloorToInt(y) & 255;
+
+          float xf = x - Mathf.Floor(x);
+          float yf = y - Mathf.Floor(y);
+
+          Vector2 topRight = new Vector2(xf - 1.0f, yf - 1.0f);
+          Vector2 topLeft = new Vector2(xf, yf - 1.0f);
+          Vector2 bottomRight = new Vector2(xf - 1.0f, yf);
+          Vector2 bottomLeft = new Vector2(xf, yf);
+
+          // Select a value from the permutation array for each of the 4 corners
+          int valueTopRight = permutation[permutation[X + 1] + Y + 1];
+          int valueTopLeft = permutation[permutation[X] + Y + 1];
+          int valueBottomRight = permutation[permutation[X + 1] + Y];
+          int valueBottomLeft = permutation[permutation[X] + Y];
+
+          float dotTopRight = Vector2.Dot(topRight, GetConstantVector(valueTopRight));
+          float dotTopLeft = Vector2.Dot(topLeft, GetConstantVector(valueTopLeft));
+          float dotBottomRight = Vector2.Dot(bottomRight, GetConstantVector(valueBottomRight));
+          float dotBottomLeft = Vector2.Dot(bottomLeft, GetConstantVector(valueBottomLeft));
+
+          float u = Fade(xf);
+          float v = Fade(yf);
+
+          return Lerp(u,
+              Lerp(v, dotBottomLeft, dotTopLeft),
+              Lerp(v, dotBottomRight, dotTopRight)
+          );
+      }
+      public static float FractalBrownianMotion(float x, float y, int numOctaves)
+      {
+          float result = 0.0f;
+          float amplitude = 1.0f;
+          float frequency = 0.005f;
+
+          for (int octave = 0; octave < numOctaves; octave++)
+          {
+              float n = amplitude * CreatePerlinNoise(x * frequency, y * frequency);
+              result += n;
+
+              amplitude *= 0.5f;
+              frequency *= 2.0f;
+          }
+
+          return result;
+      }
+      
+      private static int[] GeneratePermutation(int seed)
+      {
+          int[] p = new int[256];
+          for (int i = 0; i < 256; i++) p[i] = i;
+
+          if(seed != null) Random.InitState(seed);
+          
+
+          // Fisher-Yates shuffle
+          for (int i = 255; i > 0; i--)
+          {
+              int swapIndex = Random.Range(0, i + 1);
+              (p[i], p[swapIndex]) = (p[swapIndex], p[i]); // Swap values
+          }
+
+          // Duplicate the array for seamless wrapping
+          int[] perm = new int[512];
+          for (int i = 0; i < 512; i++) perm[i] = p[i % 256];
+
+          return perm;
+      }
 }
