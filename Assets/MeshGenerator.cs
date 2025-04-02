@@ -6,9 +6,9 @@ using UnityEngine;
 public class MeshGenerator : MonoBehaviour
 {
     Mesh mesh;
-    Vector3[] vertices;
+    //Vector3[] vertices;
     List<Vector3> vertices2;
-    int[] triangles;
+    //int[] triangles;
     List<int> triangles2;
 
     public int xheight = 20;
@@ -64,6 +64,41 @@ public class MeshGenerator : MonoBehaviour
         }
     }
 
+    public static MeshData GenerateMesh(float[,] heightMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail){
+        int width = heightMap.GetLength(0);
+        int height = heightMap.GetLength(1);
+        float topLeftX = ((float)heightMap.GetLength(0) - 1) / -2f;
+        float topLeftZ = ((float)heightMap.GetLength(1) - 1) / 2f;
+
+        int simplificationIncrement = (levelOfDetail == 0) ? 1 : levelOfDetail * 2;
+        int vericesPerLine = (width - 1)/ simplificationIncrement + 1;
+
+        MeshData meshData = new MeshData();
+        meshData.setUVsSize(width, height);
+
+        for (int z = 0; z < height; z += simplificationIncrement)
+        {
+            for(int x = 0; x < width; x += simplificationIncrement)
+            {
+                meshData.AddVertices(new Vector3(topLeftX + x, heightCurve.Evaluate(heightMap[x,z]) * heightMultiplier, topLeftZ - z));
+                //meshData.uvs[meshData.Vertices.Count] = new Vector2(x/(float)width, z/(float)height);
+
+                if(x < width - 1 && z < height - 1) //ignore right and bottom edge verices of the map
+                {
+                    meshData.AddTrianglePoint(meshData.Vertices.Count - 1);
+                    meshData.AddTrianglePoint((meshData.Vertices.Count - 1) + vericesPerLine + 1);
+                    meshData.AddTrianglePoint((meshData.Vertices.Count - 1) + vericesPerLine);
+
+                    meshData.AddTrianglePoint((meshData.Vertices.Count - 1) + vericesPerLine + 1);
+                    meshData.AddTrianglePoint(meshData.Vertices.Count - 1);
+                    meshData.AddTrianglePoint((meshData.Vertices.Count- 1) + 1);
+                }
+            }
+        }
+
+        return meshData;
+    }
+
     void UpdateMesh(){
         mesh.Clear();
         mesh.vertices = vertices2.ToArray();
@@ -71,15 +106,41 @@ public class MeshGenerator : MonoBehaviour
         mesh.Optimize();
         mesh.RecalculateNormals();
     }
+}
 
-    /*private void OnDrawGizmos(){
+public class MeshData
+{
+    public List<Vector3> Vertices { get; private set; }
+    public List<int> Triangles { get; private set; }
+    public Vector2[] uvs;
 
-        if(vertices2 != null){
-            for(int i = 0; i < vertices2.Count; i++){
-                Gizmos.DrawSphere(vertices2[i], .1f);
-            }
-        }
-    }*/
+    public MeshData()
+    {
+        Vertices = new List<Vector3>();
+        Triangles = new List<int>();
+        uvs = new Vector2[1];
+    }
+
+    public Mesh CreateMesh(){
+        Mesh mesh = new Mesh();
+        mesh.vertices = Vertices.ToArray();
+        mesh.triangles = Triangles.ToArray();
+        //mesh.uv = uvs;
+        mesh.RecalculateNormals();
+        return mesh;
+    }
+
+    public void setUVsSize(int width, int height){
+        uvs = new Vector2[width * height];
+    }
+
+    public void AddTrianglePoint(int x){
+        Triangles.Add(x);
+    }
+
+    public void AddVertices(Vector3 vector){
+        Vertices.Add(vector);
+    }
 
 }
 

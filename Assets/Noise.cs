@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 public static class Noise 
 {
+
       private static int[] permutation;
 
       public static void Initialize(int seed)
@@ -18,6 +19,46 @@ public static class Noise
             Initialize(0);
         }
     }
+
+    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale, int seed, int octaves, float persistance, float lacunarity, Vector2 offset) {
+        
+        Initialize(seed);
+        float[,] noiseMap = new float[mapWidth,mapHeight];
+
+            if (scale <= 0) {
+              scale = 0.0001f;
+            }
+
+            float maxNoiseHeight = float.MinValue;
+            float minNoiseHeight = float.MaxValue;
+
+            //so it zooms in to the center
+            float halfWidth = mapWidth / 2f; 
+            float halfHeight = mapHeight / 2f;
+
+            for (int y = 0; y < mapHeight; y++) {
+              for (int x = 0; x < mapWidth; x++) {
+                float sampleX = (x - halfWidth) / scale;
+                float sampleY = (y - halfHeight) / scale;
+
+                float perlinValue = FractalBrownianMotion(sampleX, sampleY, octaves, persistance, lacunarity, offset);
+                if (perlinValue > maxNoiseHeight) {
+					      maxNoiseHeight = perlinValue;
+				        } else if (perlinValue < minNoiseHeight) {
+					      minNoiseHeight = perlinValue;
+				        }
+                noiseMap [x, y] = perlinValue;
+              }
+            }
+
+            for (int y = 0; y < mapHeight; y++) {
+              for (int x = 0; x < mapWidth; x++) {
+                noiseMap [x, y] = Mathf.InverseLerp (minNoiseHeight, maxNoiseHeight, noiseMap [x, y]);
+              }
+            }
+            return noiseMap;
+    }
+
 
       private static Vector2 GetConstantVector(int v)
       {
@@ -76,22 +117,29 @@ public static class Noise
               Lerp(v, dotBottomRight, dotTopRight)
           );
       }
-      public static float FractalBrownianMotion(float x, float y, int numOctaves)
+      public static float FractalBrownianMotion(float x, float y, int numOctaves, float persistance = 0.5f, float lacunarity = 2.0f, Vector2 offset = default(Vector2))
       {
-          float result = 0.0f;
-          float amplitude = 1.0f;
-          float frequency = 0.005f;
+            Vector2[] octaveOffsets = new Vector2[numOctaves];
+            for (int i = 0; i < numOctaves; i++) {
+              float offsetX = Random.Range(-100000, 100000) + offset.x;
+              float offsetY = Random.Range(-100000, 100000) + offset.y;
+              octaveOffsets [i] = new Vector2 (offsetX, offsetY);
+            }
 
-          for (int octave = 0; octave < numOctaves; octave++)
-          {
-              float n = amplitude * CreatePerlinNoise(x * frequency, y * frequency);
-              result += n;
+            float result = 0.0f;
+            float amplitude = 1.0f;
+            float frequency = 0.005f;
 
-              amplitude *= 0.5f;
-              frequency *= 2.0f;
-          }
+            for (int octave = 0; octave < numOctaves; octave++)
+            {
+                float n = amplitude * (CreatePerlinNoise(x * frequency, y * frequency) * 2 - 1);
+                result += n;
 
-          return result;
+                amplitude *= persistance;
+                frequency *= lacunarity;
+            }
+
+            return result;
       }
       
       private static int[] GeneratePermutation(int seed)
