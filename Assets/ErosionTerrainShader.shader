@@ -1,3 +1,4 @@
+//Source: https://github.com/SebLague/Hydraulic-Erosion/blob/Coding-Adventure-E01/Assets/Scripts/Terrain.shader
 Shader "Custom/ErosionTerrain"
 {
     Properties {

@@ -5,19 +5,21 @@ public class Erosion : MonoBehaviour
 {
     [Header("Erosion Settings")]
     public int erosionRadius = 3;
-    public int numParticles = 50000;
-    public int particleLifetime = 15;
-    public float inertia = 0.15f;
-    public float sedimentCapacityFactor = 1f;
-    public float minSedimentCapacity = 0.05f;
-    public float depositSpeed = 0.5f;
-    public float erodeSpeed = 0.05f;
+    public int numParticles = 10000;
+    public int seed = 0;
+
+    private float erodeSpeed = 0.0012f;
+    private float sedimentCapacityFactor = 2.0f;
+    private float minSedimentCapacity = 0.05f;
+    private float depositSpeed = 0.005f;
+    private float gravity = 1.4f;
+    private float inertia = 0.2f;   
+    private int particleLifetime = 25;
+
     public float evaporateSpeed = 0.01f;
-    public float gravity = 2f;
     public float friction = 0.15f;
     public float initialSpeed = 1f;
     public float initialWaterVolume = 1f;
-    public int seed = 0;
 
     private float[,] map;
     private int width;
@@ -49,10 +51,8 @@ public class Erosion : MonoBehaviour
         System.Array.Resize(ref erosionBrushOffsets, brushIndex);
     }
 
-    // Apply hydraulic erosion to a height map
-    public float[,] Erode(float[,] heightMap, int seed = 0, float preservationFactor = 0.9f)
+    public float[,] Erode(float[,] heightMap, int seed = 0, float preservationFactor = 0.5f)
     {
-        // Store original heightmap for later blending
         float[,] originalMap = new float[heightMap.GetLength(0), heightMap.GetLength(1)];
         System.Array.Copy(heightMap, originalMap, heightMap.Length);
         
@@ -93,14 +93,11 @@ public class Erosion : MonoBehaviour
             int nodeX = (int)posX;
             int nodeY = (int)posY;
             
-            // Calculate droplet's offset inside the cell (0,0) to (1,1)
             float cellOffsetX = posX - nodeX;
             float cellOffsetY = posY - nodeY;
-            
-            // Calculate droplet's height and direction of flow with bilinear interpolation of surrounding heights
+
             HeightAndGradient heightAndGradient = CalculateHeightAndGradient(posX, posY);
-            
-            // Update the droplet's direction and position (using normal)
+
             dirX = dirX * inertia - heightAndGradient.gradientX * (1 - inertia);
             dirY = dirY * inertia - heightAndGradient.gradientY * (1 - inertia);
             
@@ -114,38 +111,35 @@ public class Erosion : MonoBehaviour
             posX += dirX;
             posY += dirY;
             
-            // Stop simulating if droplet is outside map
+            //Stop if droplet outside map
             if (posX < 0 || posX >= width - 1 || posY < 0 || posY >= height - 1) {
                 break;
             }
             
-            // Find the droplet's new height and calculate the deltaHeight
             float newHeight = CalculateHeightAndGradient(posX, posY).height;
             float deltaHeight = newHeight - heightAndGradient.height;
             
-            // Calculate the droplet's sediment capacity (higher when moving fast down steep slopes)
+            //droplet's sediment capacity higher when moving fast down steep slopes
             float sedimentCapacity = Mathf.Max(minSedimentCapacity, sedimentCapacityFactor * speed * -deltaHeight);
             
-            // If carrying more sediment than capacity, or if flowing uphill, deposit a fraction of the excess sediment
+            //If carrying more sediment than capacity or if flowing uphill deposit a fraction of the excess sediment
             if (sediment > sedimentCapacity || deltaHeight > 0) {
                 float amountToDeposit = deltaHeight > 0 ? 
-                    Mathf.Min(deltaHeight, sediment) : // Going uphill, deposit all of deltaHeight
-                    (sediment - sedimentCapacity) * depositSpeed; // Going downhill, deposit fraction of excess
+                    Mathf.Min(deltaHeight, sediment) :
+                    (sediment - sedimentCapacity) * depositSpeed;
                 
                 sediment -= amountToDeposit;
-                
-                // Add the sediment to the four nodes of the current cell using bilinear interpolation
-                // Deposition is not distributed over a radius (like erosion) so that it's much more local
+
                 int coordX = (int)posX;
                 int coordY = (int)posY;
                 
-                // Calculate weights for each node based on the droplet's position
+                //Calculate weights for each node based on the dropet's position
                 float weightTL = (1 - cellOffsetX) * (1 - cellOffsetY);
                 float weightTR = cellOffsetX * (1 - cellOffsetY);
                 float weightBL = (1 - cellOffsetX) * cellOffsetY;
                 float weightBR = cellOffsetX * cellOffsetY;
                 
-                // Distribute sediment to the nodes
+                //Distribute sediment
                 if (coordX >= 0 && coordX < width - 1 && coordY >= 0 && coordY < height - 1) {
                     map[coordX, coordY] += amountToDeposit * weightTL;
                     map[coordX + 1, coordY] += amountToDeposit * weightTR;
@@ -154,11 +148,10 @@ public class Erosion : MonoBehaviour
                 }
             } 
             else {
-                // Erode a fraction of the droplet's current carrying capacity.
-                // Clamp the erosion to the change in height so that it doesn't dig a hole
-                float amountToErode = Mathf.Min((sedimentCapacity - sediment) * erodeSpeed, -deltaHeight);
+                //Erode a fraction of the droplets current carrying capacity
+                float amountToErode = Mathf.Min((sedimentCapacity - sediment) * erodeSpeed, -deltaHeight); //Clamp so doesn't dig a hole
                 
-                // Use erosion brush to erode from all nodes inside the droplet's radius
+                //erode from all nodes inside the dropet's radius
                 for (int brushPointIndex = 0; brushPointIndex < erosionBrushWeights.Length; brushPointIndex++) {
                     int nodeIndex = nodeY * width + nodeX + erosionBrushOffsets[brushPointIndex];
                     
@@ -172,8 +165,7 @@ public class Erosion : MonoBehaviour
                     }
                 }
             }
-            
-            // Update droplet's speed and water content
+
             speed = Mathf.Sqrt(speed * speed + deltaHeight * gravity);
             speed = Mathf.Max(0, speed * (1 - friction));
             water *= (1 - evaporateSpeed);
@@ -189,22 +181,21 @@ public class Erosion : MonoBehaviour
     HeightAndGradient CalculateHeightAndGradient(float posX, float posY) {
         int coordX = (int)posX;
         int coordY = (int)posY;
-        
-        // Calculate droplet's offset inside the cell (0,0) to (1,1)
+
         float x = posX - coordX;
         float y = posY - coordY;
         
-        // Calculate heights of the four nodes of the droplet's cell
+        //calculate heights of the four nodes of the droplets cell
         float heightNW = coordX >= 0 && coordY >= 0 && coordX < width && coordY < height ? map[coordX, coordY] : 0;
         float heightNE = coordX >= -1 && coordY >= 0 && coordX < width - 1 && coordY < height ? map[coordX + 1, coordY] : heightNW;
         float heightSW = coordX >= 0 && coordY >= -1 && coordX < width && coordY < height - 1 ? map[coordX, coordY + 1] : heightNW;
         float heightSE = coordX >= -1 && coordY >= -1 && coordX < width - 1 && coordY < height - 1 ? map[coordX + 1, coordY + 1] : heightNW;
         
-        // Calculate droplet's direction of flow with bilinear interpolation of height difference along the edges
+        //Calculate droplets direction of flow with bilinear interpolation of height difference along edges
         float gradientX = (heightNE - heightNW) * (1 - y) + (heightSE - heightSW) * y;
         float gradientY = (heightSW - heightNW) * (1 - x) + (heightSE - heightNE) * x;
         
-        // Calculate height with bilinear interpolation of the heights of the nodes of the cell
+        //Calculate height with bilinear interpolation of the heights of the nodes of the cell
         float terrainHeight = heightNW * (1 - x) * (1 - y) + heightNE * x * (1 - y) + heightSW * (1 - x) * y + heightSE * x * y;
         
         HeightAndGradient result = new HeightAndGradient();
@@ -221,12 +212,6 @@ public class Erosion : MonoBehaviour
         erosion.numParticles = numParticles;
         erosion.erosionRadius = erosionRadius;
         erosion.seed = seed;
-        erosion.erodeSpeed = 0.12f;
-        erosion.sedimentCapacityFactor = 2.0f; 
-        erosion.depositSpeed = 0.0005f; 
-        erosion.gravity = 1.4f;
-        erosion.inertia = 0.2f;            
-        erosion.particleLifetime = 25;  
         
         float[,] erodedMap = erosion.Erode(heightMap, seed, 0.9f);
         return erodedMap;

@@ -8,11 +8,9 @@ public class MapGenerator : MonoBehaviour {
     [Range(0,6)]
     public int lod;
     const int mapChunkSize = 241;
-	//public int mapChunkSize;
-	//public int mapChunkSize;
 	public float noiseScale;
-
 	public int octaves;
+
 	[Range(0,1)]
 	public float persistance;
 	public float lacunarity;
@@ -23,9 +21,10 @@ public class MapGenerator : MonoBehaviour {
 	public Vector2 offset;
 
 	public bool autoUpdate;
+    public int erosionNumParticles = 1000;
 
 
-    //Buttons
+    [Header("Buttons")]
     public Slider lodSlider;
     public Slider noiseScaleSlider;
     public TMP_InputField octavesField;
@@ -35,22 +34,24 @@ public class MapGenerator : MonoBehaviour {
     public TMP_InputField meshHeightMultiplierField;
     public Toggle autoUpdateToggle;
     public Button generateButton;
-    public Toggle materialToggle;  // Reference to the Toggle UI element
-    public MeshRenderer meshRenderer;  // Reference to the MeshRenderer of the object
+    public Toggle materialToggle;
+    public MeshRenderer meshRenderer;
+    public TMP_InputField erosionNumParticlesInputField;
 
-
-    public Material defaultMaterial;  // First material
+    [Header("Materials")]
+    public Material defaultMaterial; 
     public Material materialWithTriangles; 
-    public GameObject meshObject;  // Assign your mesh object in the Inspector
-    public GameObject planeObject; // Assign your plane object in the Inspector
+
+    [Header("Game Objects")]
+    public GameObject meshObject;
+    public GameObject planeObject;
 
     private bool isMeshActive = true;
 
     private static float[,] noiseMap;
 
 	public void GenerateMap() {
-		noiseMap = Noise.GenerateNoiseMap (mapChunkSize, mapChunkSize, noiseScale, seed, octaves, persistance, lacunarity, offset);
-        
+		noiseMap = Noise.GenerateNoiseMap (mapChunkSize, mapChunkSize, noiseScale, seed, octaves, persistance, lacunarity);
 
 		MapDisplay display = FindObjectOfType<MapDisplay> ();
 		display.DrawNoiseMap (noiseMap);
@@ -62,32 +63,26 @@ public class MapGenerator : MonoBehaviour {
         if(noiseMap == null)
             return;
 
-		noiseMap = Erosion.ApplyErosion(noiseMap);
+        if(!string.IsNullOrEmpty(erosionNumParticlesInputField.text) && int.Parse(erosionNumParticlesInputField.text) > 0 && int.Parse(erosionNumParticlesInputField.text) < 100000)
+        {
+            erosionNumParticles =  int.Parse(erosionNumParticlesInputField.text);
+        }
+        else
+        {
+            erosionNumParticlesInputField.text = "10000";
+            erosionNumParticles = 10000;
+        }
+
+		noiseMap = Erosion.ApplyErosion(noiseMap, erosionNumParticles);
         
 		MapDisplay display = FindObjectOfType<MapDisplay> ();
 		display.DrawNoiseMap (noiseMap);
         display.DrawMesh(MeshGenerator.GenerateMesh(noiseMap, meshHeightMultiplier, meshHeightCurve, lod));
 	}
 
-    	/*void OnValidate() {
-		if (mapChunkSize < 1) {
-			mapChunkSize = 1;
-		}
-		if (mapChunkSize < 1) {
-			mapChunkSize = 1;
-		}
-		if (lacunarity < 1) {
-			lacunarity = 1;
-		}
-		if (octaves < 0) {
-			octaves = 0;
-		}
-	}*/
-
     void Start()
     {
         generateButton.onClick.AddListener(OnGenerateButtonClick);
-
     }
     void OnGenerateButtonClick()
     {
@@ -110,7 +105,7 @@ public class MapGenerator : MonoBehaviour {
         planeObject.SetActive(!isMeshActive);
     }
 
-public void SwitchMaterial()
+    public void SwitchMaterial()
     {
         if (meshRenderer != null)
         {
@@ -121,5 +116,4 @@ public void SwitchMaterial()
             Debug.LogWarning("MeshRenderer not assigned.");
         }
     }
-	
 }

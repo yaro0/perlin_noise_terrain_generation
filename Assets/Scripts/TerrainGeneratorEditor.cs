@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor (typeof(MapGenerator))]
+/*[CustomEditor (typeof(MapGenerator))]
 public class TerrainGeneratorEditor : Editor
 {
     public override void OnInspectorGUI(){
@@ -17,4 +17,4 @@ public class TerrainGeneratorEditor : Editor
             mapGen.GenerateMap();
         }
     }
-}
+} */
