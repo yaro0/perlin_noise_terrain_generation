@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unity Terrain Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #334155;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f9ff;
+        }
+        header {
+            background: linear-gradient(135deg, #93c5fd, #86efac, #a5f3fc);
+            color: #1e3a8a;
+            text-align: center;
+            padding: 70px 20px;
+        }
+        h1 {
+            margin: 0;
+            font-size: 3.2em;
+        }
+        .subtitle {
+            font-size: 1.3em;
+            margin-top: 12px;
+            color: #1e40af;
+        }
+        nav {
+            background-color: #0f766e;
+            position: sticky;
+            top: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            z-index: 100;
+        }
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+        nav ul li {
+            padding: 0;
+        }
+        nav ul li a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 16px 22px;
+            transition: all 0.3s ease;
+        }
+        nav ul li a:hover {
+            background-color: #0d9488;
+        }
+        section {
+            padding: 50px 20px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        .media-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: center;
+            margin: 35px 0;
+        }
+        .media-item {
+            flex: 0 0 calc(45% - 24px);
+            min-width: 360px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .media-item img, .media-item video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .media-caption {
+            padding: 16px;
+            text-align: center;
+            font-style: italic;
+            color: #1f2937;
+        }
+        h2 {
+            color: #065f46;
+            text-align: center;
+            margin-bottom: 35px;
+            font-size: 2.2em;
+        }
+        h3 {
+            color: #0e7490;
+            margin-bottom: 8px;
+            margin-top: 30px;
+        }
+        .feature-icon {
+            color: #0e7490;
+            margin-right: 10px;
+        }
+        footer {
+            background-color: #0f766e;
+            color: white;
+            text-align: center;
+            padding: 25px;
+            margin-top: 50px;
+        }
+        .feature {
+            margin-bottom: 30px;
+        }
+        .code-section {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin: 28px 0;
+            overflow-x: auto;
+        }
+        code {
+            background-color: #f1f5f9;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        pre {
+            background-color: #f1f5f9;
+            padding: 18px;
+            border-left: 4px solid #0e7490;
+            overflow-x: auto;
+            font-family: monospace;
+            margin: 12px 0;
+            line-height: 1.4;
+        }
+        @media (max-width: 768px) {
+            .media-item {
+                flex: 0 0 100%;
+            }
+            nav ul {
+                flex-direction: column;
+            }
+            nav ul li {
+                text-align: center;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <h1>Terrain Generator with Perlin Noise and Erosion</h1>
+        <p class="subtitle">Procedural terrain generation using Perlin noise with fractal Brownian motion and hydraulic erosion</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#gallery">Gallery</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#technical">Technical Details</a></li>
+        </ul>
+    </nav>
+
+    <section id="overview">
+        <h2>Project Overview</h2>
+        <p>This is a terrain generation tool that allows users to create and modify a 3D mesh-based terrain. The tool allows users to generate a terrain mesh with customizable resolution and to modify them using Perlin noise. Additionally, it features a particle-based hydraulic erosion technique that simulates the effects of water flow.</p>
+        
+        <p>Users can create a variety of diverse terrains by adjusting different parameters and applying erosion to the mesh thanks to the intuitive UI. This makes the tool ideal for quick experimentation and generation of random terrain. </p>
+    </section>
+
+    <section id="gallery">
+        <h2>Gallery</h2>
+        <div class="media-container">
+            <div class="media-item">
+                <img src="demo1.png" alt="Demo 1">
+                <div class="media-caption">Terrain with perlin noise</div>
+            </div>
+            <div class="media-item">
+                <img src="demo2.png" alt="Demo 2">
+                <div class="media-caption">Heightmap for visualization</div>
+            </div>
+            <div class="media-item">
+                <img src="demo3.png" alt="Demo 3">
+                <div class="media-caption">Terrain with perlin noise and erosion</div>
+            </div>
+            <div class="media-item">
+                <img src="demo4.png" alt="Demo 4">
+                <div class="media-caption">Terrain with perlin noise and erosion</div>
+            </div>
+            <div class="media-item">
+                <img src="demo5.png" alt="Demo 5">
+                <div class="media-caption">Terrain with perlin noise and erosion</div>
+            </div>
+            <div class="media-item">
+                <img src="demo6.png" alt="Demo 6">
+                <div class="media-caption">Terrain with perlin noise and erosion</div>
+            </div>
+            <div class="media-item">
+                <img src="demo7.png" alt="Demo 7">
+                <div class="media-caption">Lower resolution mesh</div>
+            </div>
+            <div class="media-item">
+                <img src="demo8.png" alt="Demo 8">
+                <div class="media-caption">Terrain with perlin noise and erosion</div>
+            </div>
+        </div>
+
+        <h3>Demo Videos</h3>
+        <div class="media-container">
+            <div class="media-item">
+                <video controls>
+                    <source src="VideoDemo1.mp4" type="video/mp4">
+                </video>
+                <div class="media-caption">Terrain generation process</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features">
+        <h2>Key Features</h2>
+        <div class="features-grid">
+            <div class="feature">
+                <h3><i class="fas fa-mountain feature-icon"></i>Perlin Noise Terrain</h3>
+                <p>Generate natural-looking terrain using multi-octave Perlin noise with adjustable scale, persistence, and lacunarity.</p>
+            </div>
+            
+            <div class="feature">
+                <h3><i class="fas fa-water feature-icon"></i>Hydraulic Erosion</h3>
+                <p>Simulate water erosion to create realistic terrain features like valleys and sediment deposits.</p>
+            </div>
+            <div class="feature">
+                <h3><i class="fas fa-gamepad feature-icon"></i>Interactive UI</h3>
+                <p>Adjust terrain parameters with a user-friendly interface like sliders, input fields, and visualization options.</p>
+            </div>
+        </div>
+    
+        <style>
+            .features-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                gap: 30px;
+                margin-top: 40px;
+            }
+            
+            .feature {
+                margin-bottom: 10px;
+                padding: 0 10px;
+                position: relative;
+                border-left: 3px solid #0e7490;
+                padding-left: 20px;
+                transition: transform 0.2s ease;
+            }
+            
+            .feature:hover {
+                transform: translateX(5px);
+            }
+            
+            .feature h3 {
+                font-size: 1.3em;
+                margin-bottom: 12px;
+                color: #0e7490;
+            }
+            
+            .feature-icon {
+                margin-right: 10px;
+                color: #0e7490;
+            }
+            
+            .feature p {
+                margin-top: 0;
+                line-height: 1.5;
+            }
+            
+            @media (max-width: 768px) {
+                .features-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </section>
+
+    <section id="technical">
+        <h2>Technical Details</h2>
+        
+        <div class="code-section">
+            <h3>Noise Generation</h3>
+            <p>The Perlin Noise function was implemented using a permutation-based noise function. It works by assigning random gradient vectors to grid points and interpolating values between them to create smooth variations. The random vectors are selected from a set of predefined constant vectors to determine the direction of gradients at each point, ensuring consistency in the noise pattern.
+                To enhance the terrain’s realism and make it less smooth, fractal Brownian motion (FBM) was applied. This allowed the layering of multiple octaves of Perlin noise at different frequencies and amplitudes, allowing the terrain to look a bit more organic than simple random noise. 
+                </p>
+            <h3>Breakdown</h3>
+            <pre>
+ ** 1. Initialize the coordinates (x, y) and wrap them to stay within a certain range (0-255). **
+int X = Mathf.FloorToInt(x) & 255;
+int Y = Mathf.FloorToInt(y) & 255;
+
+** 2. Calculate the fractional part of x and y. **
+
+float xf = x - Mathf.Floor(x);
+float yf = y - Mathf.Floor(y);
+                
+** 3. Define vectors for the four surrounding grid points. **
+                
+Vector2 topRight = new Vector2(xf - 1.0f, yf - 1.0f);
+Vector2 topLeft = new Vector2(xf, yf - 1.0f);
+Vector2 bottomRight = new Vector2(xf - 1.0f, yf);
+Vector2 bottomLeft = new Vector2(xf, yf);
+                
+** 4. Use the permutation table to look up gradient values for each grid point. **
+                
+int valueTopRight = permutationTable[permutationTable[X + 1] + Y + 1];
+int valueTopLeft = permutationTable[permutationTable[X] + Y + 1];
+int valueBottomRight = permutationTable[permutationTable[X + 1] + Y];
+int valueBottomLeft = permutationTable[permutationTable[X] + Y];
+                
+** 5. Calculate dot products between gradient vectors and their relative positions. **
+                
+float dotTopRight = Vector2.Dot(topRight, GetConstantVector(valueTopRight));
+float dotTopLeft = Vector2.Dot(topLeft, GetConstantVector(valueTopLeft));
+float dotBottomRight = Vector2.Dot(bottomRight, GetConstantVector(valueBottomRight));
+float dotBottomLeft = Vector2.Dot(bottomLeft, GetConstantVector(valueBottomLeft));
+                
+** 6. Interpolate the results using the fractional parts of x and y. **
+                
+float u = Fade(xf);
+float v = Fade(yf);
+                
+return Lerp(u, Lerp(v, dotBottomLeft, dotTopLeft), Lerp(v, dotBottomRight, dotTopRight));
+                </pre>
+        </div>
+
+        <div class="code-section">
+            <h3>Erosion Algorithm</h3>
+            <p>The hydraulic erosion algorithm was implemented using a particle-based simulation technique. The process starts by creating water droplets at random positions on the terrain. Each droplet follows the current height gradients and adjusts its direction and speed based on the terrain’s slope. As the droplet moves it either picks up or deposits sediment, modifying the terrain. The sediment capacity is dynamically adjusted based on speed and slope steepness, allowing a realistic simulation of erosion.
+                <br><br>The erosion technique uses bilinear interpolation to distribute sediment across the terrain grid. When a droplet deposits sediment, the material is distributed among the surrounding grid points based on the droplet’s exact location. This prevents sharp or unnatural edges in the terrain. Additionally, erosion is applied using a weighted brush effect, ensuring that the elevation changes gradually rather than in abrupt cuts.
+                <br><br>To refine the erosion effect more, parameters like inertia, friction and evaporation rate were added. Inertia determines how much a droplet resists changing direction, while friction and evaporation affect the droplet’s lifespan and ability to transport sediment.
+                </p>
+            <h3>Breakdown</h3>
+            <pre>
+** 1. Initialize a random water droplet position on the map. **
+                
+float posX = random.Next(0, width - 1);
+float posY = random.Next(0, height - 1);
+                
+** 2. Set the initial droplet parameters (speed, water volume, etc.). ** 
+                
+float dirX = 0;
+float dirY = 0;
+float sediment = 0;
+float speed = initialSpeed;
+float water = initialWaterVolume;
+                
+** 3. Simulate the movement of the droplet over a specified lifetime. ** 
+                
+for (int lifetime = 0; lifetime < particleLifetime; lifetime++) {
+ // Calculate height and gradient at current droplet position
+HeightAndGradient heightAndGradient = CalculateHeightAndGradient(posX, posY);
+                
+// Adjust direction based on the gradient (simulating water flow)
+dirX = dirX * inertia - heightAndGradient.gradientX * (1 - inertia);
+dirY = dirY * inertia - heightAndGradient.gradientY * (1 - inertia);
+                
+** 4. Normalize the direction vector to ensure consistent flow. ** 
+                
+float len = Mathf.Sqrt(dirX * dirX + dirY * dirY);
+if (len != 0) {
+dirX /= len;
+dirY /= len;
+}
+                
+posX += dirX;
+posY += dirY;
+                
+** 5. Stop if the droplet moves outside the map boundaries. ** 
+                
+if (posX < 0 || posX >= width - 1 || posY < 0 || posY >= height - 1) {
+   break;
+}
+                
+** 6. Calculate the new height difference (delta) as the droplet moves. ** 
+                
+float deltaHeight = newHeight - heightAndGradient.height;
+                
+** 7. Calculate the sediment capacity based on droplet speed and slope. ** 
+                
+float sedimentCapacity = Mathf.Max(minSedimentCapacity, sedimentCapacityFactor * speed * -deltaHeight);
+                
+** 8. If the droplet has more sediment than it can carry or moves uphill, deposit excess sediment.** 
+                
+if (sediment > sedimentCapacity || deltaHeight > 0) {
+    float amountToDeposit = deltaHeight > 0 ? Mathf.Min(deltaHeight, sediment) : (sediment - sedimentCapacity) * depositSpeed;
+                
+    / Distribute sediment to surrounding grid points
+     map[coordX, coordY] += amountToDeposit * weightTL;
+    map[coordX + 1, coordY] += amountToDeposit * weightTR;
+    map[coordX, coordY + 1] += amountToDeposit * weightBL;
+    map[coordX + 1, coordY + 1] += amountToDeposit * weightBR;
+}
+                
+** 9. If the droplet is carrying less sediment, erode the terrain.** 
+                
+float amountToErode = Mathf.Min((sedimentCapacity - sediment) * erodeSpeed, -deltaHeight);
+                
+// Erode terrain by removing sediment from surrounding grid points
+for (int brushPointIndex = 0; brushPointIndex < erosionBrushWeights.Length; brushPointIndex++) {
+    int nodeIndex = nodeY * width + nodeX + erosionBrushOffsets[brushPointIndex];
+    map[brushX, brushY] -= weighedErodeAmount;
+    sediment += deltaSediment;
+}
+                
+** 10. Update droplet speed, water volume, and apply evaporation. **
+                
+speed = Mathf.Sqrt(speed * speed + deltaHeight * gravity);
+speed = Mathf.Max(0, speed * (1 - friction));
+water *= (1 - evaporateSpeed);
+                </pre>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 Unity Terrain Generator Project by Yaroslava Kost</p>
+    </footer>
+</body>
+</html>
